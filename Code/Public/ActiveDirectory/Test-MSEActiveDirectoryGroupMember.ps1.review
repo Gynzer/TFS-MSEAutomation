@@ -1,0 +1,53 @@
+
+#################################################################################################################################################
+# Function Test-NPEActiveDirectoryGroupMember                                                                                Tested in Section DG
+#################################################################################################################################################
+<# 
+ .SYNOPSIS 
+	 Will test if a UserID is in an AD Group
+ .DESCRIPTION 
+	 Will test a UserID to is in an AD Group
+ .NOTES 
+     Author       : 	 Ron Gines
+     Version Date : 	 Version 1.0 - Cleaned up for first NPPC release
+ .PARAMETER <GroupLdap>
+     This is the Pre-Windows2000 group name in AD for a specific target group.
+ .EXAMPLE 
+#> 
+
+function Test-NPEActiveDirectoryGroupMember
+{
+  [CmdletBinding(SupportsShouldProcess=$True)]
+  Param(
+    [Parameter(Mandatory=$True)] [string]$NewUserID,
+    [Parameter(Mandatory=$True)] [string]$LDAPContainer,
+    [Parameter(Mandatory=$True)] [string]$GroupName       # Non-Pre-Windows2000 Names
+  ) # EndParam
+  $FunctionName = "Test-NPEActiveDirectoryGroupMember"
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+Log-NPEWrite $ScriptLogFullName "$($FunctionName): >>>>>Loading" $false
+Log-NPEWrite $ScriptLogFullName "$($FunctionName): Var: NewUSerID:    $NewUserID" $false
+Log-NPEWrite $ScriptLogFullName "$($FunctionName): Var: LDAPContainer $LDAPContainer" $false
+Log-NPEWrite $ScriptLogFullName "$($FunctionName): Var: GroupName:    $GroupName" $false
+  $GroupName = $GroupName.trim()
+  $ScriptBlock = [scriptblock]::Create("Get-ADGroup -SearchBase '$LDAPContainer' -filter { SamAccountName -like '$GroupName' }")
+#Write-Host "SCRIPTBLOCK1(Test): $($Scriptblock)"
+  $TempGroup = & $ScriptBlock
+#Write-Host "TEMPGROUP(Test): $($TempGroup)"
+  $TestList = Get-ADGroupMember -Identity $TempGroup
+  $ScriptBlock2 = [scriptblock]::Create("Get-ADGroupMember -Identity '$TempGroup' | Select-Object -ExpandProperty SamAccountName")
+#Write-Host "SCRIPTBLOCK2(Test): $($Scriptblock2)"
+  $GroupMemberList = & $ScriptBlock2
+#Write-Host "GroupMemberList: $($GroupmemberList)"
+  If ($GroupMemberList -contains $NewUserID){
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): $($NewUserID) is a member of $($GroupName)." $false
+    $Success = $True
+  }Else{
+    Log-NPEError $ScriptLogFullName "$($FunctionName): $($NewUserID) is not a member of the $($GroupName) group."
+    Log-NPEError -LogPath $ScriptLogFullName -ErrorDesc "$($FunctionName): $($_.Exception)"
+    $Success = $False
+  } # EndIf
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): <<<<<Exiting $($FunctionName) with result: $($Result))" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  Return $Success
+} # End Function Test-NPEActiveDirectoryGroupMember

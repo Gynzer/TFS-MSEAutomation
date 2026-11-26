@@ -1,0 +1,56 @@
+#################################################################################################################################################
+# Function New-NPEActiveDirectoryGroup                                                                                    Tested in Section DA
+#################################################################################################################################################
+<# 
+ .SYNOPSIS 
+     Function to create a group in one of our NPPC OUs
+ .DESCRIPTION 
+     Function to create a group in one of our NPPC OUs
+ .NOTES 
+     Author       : 	 Ron Gines
+     Version Date : 	 Version 1.0 - Cleaned up for first NPPC release
+ .PARAMETER <Name>
+     Pre
+ .PARAMETER <GroupOU>
+     Pre
+ .PARAMETER <Description>
+     Pre
+ .PARAMETER <Samname>
+     Pre
+ .EXAMPLE 
+     $GroupCollection = Find-UsersGroups PUClausSa
+#> 
+function New-NPEActiveDirectoryGroup
+{
+  [CmdletBinding(SupportsShouldProcess=$True)]
+  Param(
+    [Parameter(Mandatory=$True)] [string]$Name,
+    [Parameter(Mandatory=$True)] [string]$GroupOU,
+    [Parameter(Mandatory=$True)] [string]$SamName,
+    [Parameter(Mandatory=$False)] [string]$Description
+  ) # EndParam
+  $FunctionName = "New-NPEActiveDirectoryGroup"
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): >>>>>Loading" $false
+  $CheckIfThere = Test-NPEActiveDirectoryObjectExistence $SamName $GroupOU "Group"
+  If ($CheckIfThere){
+    $Success = $False
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Groupt $($SamName) already exists in AD." $true
+  }Else{
+    NEW-ADGroup –name “$($Name)” –groupscope Global –path “$($GroupOU)” -Description "$($Description)" -DisplayName "$($Name)" -SamAccountName "$($SamName)"
+    # -OtherAttributes @{'favColors'="pink","purple"; 'dateOfBirth'=" 01/01/1960"}
+    $CheckIfThere = Test-NPEActiveDirectoryObjectExistence $SamName $GroupOU "Group"
+    If ($CheckIfThere){
+      $Success = $True
+      Log-NPEWrite $ScriptLogFullName "$($FunctionName): Group $($SamName) is now in AD." $true
+    }Else{
+      Log-NPEError $ScriptLogFullName "$($FunctionName): Group $($SamName) is not in AD."
+      Log-NPEError -LogPath $ScriptLogFullName -ErrorDesc "$($FunctionName): $($_.Exception)"
+      $Success = $False
+    } # EndIf 
+  } # EndIf
+  # EndIf
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): <<<<<Exiting $($FunctionName) with result: $($Result))" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  Return $Success
+} # End New-NPEActiveDirectoryGroup

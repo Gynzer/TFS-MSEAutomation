@@ -1,0 +1,41 @@
+#################################################################################################################################################
+# Function Test-NPEActiveDirectoryUserExists                                                                               
+#################################################################################################################################################
+<# 
+ .SYNOPSIS 
+	 Test for the existence of an ID within Active Directory.
+
+ .DESCRIPTION 
+	 Test for the existence of an ID within Active Directory.
+
+ .PARAMETER <Username>
+     This is the Pre-Windows2000 name of a user in the Active Directory.
+
+ .EXAMPLE 
+	 $TestResult = Test-IDADExistence PUClausSa
+       Will return a value of $true if PUClausSa exists
+       Will return a value of $false if PUClausSa does not exist
+#> 
+
+Function Test-NPEActiveDirectoryUserExists
+{
+  [CmdletBinding(SupportsShouldProcess=$True)]
+  Param(
+    [Parameter(Mandatory=$True)] [string]$username
+  ) # EndParam
+  $FunctionName = "Test-NPEActiveDirectoryUserExists "
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): >>>>>Loading" $false
+  if ($username -eq ""){
+    $username = Read-Host "Enter an Active Directory username"
+  } # Enf If
+  if (Get-ADUser -Filter {SamAccountName -eq $username}){
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): $($username) exists in AD." $true
+    return $true
+  }else{
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): $($NewUserID) Password failed in AD. Exiting." $true
+    return $false
+  } # End If
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): <<<<<Exiting $($FunctionName) with result: $($Result))" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+} # End Function Test-IDADUserExistence

@@ -1,0 +1,78 @@
+
+#################################################################################################################################################
+# Function Add-NPEActiveDirectoryGroupMember                                                                                 Tested in Section DF
+#################################################################################################################################################
+<# 
+ .SYNOPSIS 
+	 Will add a UserID to an AD Group
+ .DESCRIPTION 
+	 Will add a UserID to an AD Group
+ .NOTES 
+     Author       : 	 Ron Gines
+     Version      : 	 Version 1.0 - Cleaned up for first NPPC release
+     Date         :      June 2, 2015
+ .PARAMETER <NewUserID>
+     This is the Pre-Windows2000 user name in AD for a specific target user.
+ .PARAMETER <LDAPContainer>
+     This is the LDAP container that contains the target group
+ .PARAMETER <GroupName>
+     This is the Pre-Windows2000 group name in AD for a specific target group.
+ .EXAMPLE 
+     Where  $NewUserID = "USSTLMESTESTAPP_SVC"
+            $LDAPContainer = "ou=US-StLouis-HQ,ou=LMS Users and Groups,ou=NPPC AMS,ou=AMS,ou=Organizations,dc=nestle,dc=com"
+            $GroupName = "NPPCAMSSTLMESTESTAPP_SVC"
+            Add-NPEActiveDirectoryGroupMember $NewUserID $LDAPContainer $GroupName
+#> 
+
+function Add-NPEActiveDirectoryGroupMember
+{
+  [CmdletBinding(SupportsShouldProcess=$True)]
+  Param(
+    [Parameter(Mandatory=$True)] [string]$NewUserID,
+    [Parameter(Mandatory=$True)] [string]$LDAPContainer,
+    [Parameter(Mandatory=$True)] [string]$GroupName      # Needs to be Pre-Windows2000 format
+  ) # EndParam
+  $FunctionName = "Add-NPEActiveDirectoryGroupMember"
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): >>>>>Loading" $false
+  $GroupName = $GroupName.trim()
+  $TempGroup = $null  
+  $TempGroup = Get-ADGroup -SearchBase $LDAPContainer -filter { SamAccountName -like $GroupName }
+  If ($TempGroup -eq $null){
+    $TempGroup = Get-ADGroup -SearchBase $LDAPContainer -filter { Name -like $GroupName }
+    If ($TempGroup -eq $null){
+      Log-NPEWrite $ScriptLogFullName "$($GroupName) was not found in active directory." $true
+      $Success = $False
+      Log-NPEWrite $ScriptLogFullName "$($FunctionName): <<<<<Exiting $($FunctionName) with result: $($Result))" $false
+      Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+      Return $Success
+    }else{
+      $GroupName = $TempGroup.SamAccountName
+    }
+  }else{
+      $GroupName = $TempGroup.SamAccountName
+  }
+  If (Test-NPEActiveDirectoryGroupMember $NewUserID $LDAPContainer $GroupName){
+    Log-NPEWrite $ScriptLogFullName "$($NewUserID) is already a member of $($GroupName).  We will not be adding it to the group again." $true
+    $Success = $False
+  }Else{
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): $($NewUserID) is being added to $($GroupName) in AD." $true
+    Write-Verbose $GroupName
+    $ScriptBlock = [scriptblock]::Create("Get-ADGroup -SearchBase '$LDAPContainer' -filter { SamAccountName -like '$GroupName' }")
+    $TempGroup = & $ScriptBlock
+    $ScriptBlock2 = [scriptblock]::Create("Add-ADGroupMember -Identity '$TempGroup' -Members '$NewUserID'")
+    $TempGroup2 = & $ScriptBlock2
+    If (Test-NPEActiveDirectoryGroupMember  $NewUserID $LDAPContainer $GroupName){
+      Log-NPEWrite $ScriptLogFullName "$($FunctionName): $($NewUserID) is now a member of the $($GroupName) group."
+      $Success = $True
+    }Else{
+      Log-NPEError $ScriptLogFullName "$($FunctionName): $($NewUserID) is not a member of the $($GroupName) group."
+      Log-NPEError -LogPath $ScriptLogFullName -ErrorDesc "$($FunctionName): $($_.Exception)"
+      $Success = $False
+    } # EndIf
+  } # EndIf
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): <<<<<Exiting $($FunctionName) with result: $($Result))" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  Return $Success
+} # EndIf Add-NPEActiveDirectoryGroupMember
+

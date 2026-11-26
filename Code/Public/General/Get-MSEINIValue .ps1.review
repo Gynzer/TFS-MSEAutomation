@@ -1,0 +1,65 @@
+
+################################################################################
+# Function Get-NPEINIValue                                   Tested in Section II
+################################################################################
+
+<#
+ .SYNOPSIS
+    Read a value from an INI file accessing a specific SectionName and KeyName
+ .DESCRIPTION
+    Get an entry from an INI file. 
+    The values is stored in the variable passed by reference as OutString
+    Return True if success
+ .NOTES 
+     Author       : 	 Borrowed from BTC
+     Version Date : 	 Version 1.0 - Adapted for use in NPPC scripts
+ .EXAMPLE
+    Get-WCLINIValue <PathToIniFile> <SectionName> <keyName> <ReturnString> <OptionalDefaultValue> 
+ .EXAMPLE
+    Get-WCLINIValue "C:\Temp\Test.INI" "Cat1" "Key1" -OutString ([Ref] $Val) "Dummy" 
+    C:\Temp\Test.Ini
+    [Cat1]
+    Key1="This is the first key of Cat1"
+    Key2="This is the second key of Cat1"
+    [Cat2]
+    Key1="This is the first key of Cat2"
+    Key2="This is the second key of Cat2"
+    Read a value from the C:\Temp\Test.INI file from section Cat1, value Key1 to a powershell variable $Val, if no value exists return "Dummy"
+    Result $Val = "This is the first key of Cat1"
+#>  
+Function Get-NPEINIValue 
+{
+  [CmdletBinding(SupportsShouldProcess=$True)]
+  Param(
+    [Parameter(Mandatory=$True)] [string]$file, 
+    [Parameter(Mandatory=$True)] [string]$section, 
+    [Parameter(Mandatory=$True)] [string]$key,
+    [Parameter(Mandatory=$True)] [Ref]$OutString,
+    [Parameter(Mandatory=$True)] [string]$DefaultString = ""
+  ) # EndParam
+  # Define local variables
+  [string]$lFN = $MyInvocation.MyCommand.Name.ToString() + ": " # local-FunctionName
+  [string]$lTCFS=""  #local-TryCatchFinallyStatus
+  Write-Log ("-------------------------------------") 
+  Write-Log (">>>>>Loading") 
+  [boolean]$Local:Result = $False    
+  #
+  # Prepare the parameter types and parameter values for the Invoke-WindowsApi script 
+  $returnstring = New-Object System.Text.StringBuilder 5000 
+  $parameterTypes = [string], [string], [string], [System.Text.StringBuilder], [int], [string] 
+  $parameters = [string] $section, [string] $key, [string] $DefaultString, [System.Text.StringBuilder] $returnstring, [int] $returnstring.Capacity, [string] $file   
+  #
+  # Invoke the API 
+  $Local:ReturnValue = Invoke-WindowsApi "kernel32.dll" ([UInt32]) "GetPrivateProfileString" $parameterTypes $parameters
+  Write-Log ("GetPrivateProfileString returnvalue="+ $local:ReturnValue + " returnString="+ $ReturnString)
+  If ($local:ReturnValue -ne 0) {
+    $Local:Result = $True
+  } # EndIf
+  $OutString.Value = $returnstring.ToString()
+  #
+  # And return the results 
+  Write-Log ("<<<<<Exiting with result="+ $local:Result)
+  Write-Log ("-------------------------------------")
+  # [string]$lFN = "???" # local-FunctionName
+  Return $local:Result
+} # End Get-NPEINIValue

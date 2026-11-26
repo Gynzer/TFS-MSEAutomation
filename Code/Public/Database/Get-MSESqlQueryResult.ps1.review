@@ -1,0 +1,57 @@
+#################################################################################################################################################
+# Function Get-NPESQLQueryResult                                                                                             Tested in Section HD
+#################################################################################################################################################
+<# 
+ .SYNOPSIS 
+	 Function to query a DB2 database
+ .DESCRIPTION 
+	 Function to query a DB2 database
+ .NOTES 
+     Author       : 	 Jeff Elking
+     Version Date : 	 Version 1.0 - Cleaned up for first NPPC release
+ .PARAMETER <database>
+ .PARAMETER <query>
+ .PARAMETER <server>
+ .PARAMETER <userid>
+ .PARAMETER <password>
+ .EXAMPLE 
+#> 
+Function Get-NPESQLQueryResult
+{
+  [CmdletBinding(SupportsShouldProcess=$True)]
+  Param(
+    [Parameter(Mandatory=$True)] [string]$database,
+    [Parameter(Mandatory=$True)] [string]$query,
+    [Parameter(Mandatory=$True)] [string]$server,
+    [Parameter(Mandatory=$True)] [string]$userid,
+    [Parameter(Mandatory=$True)] [string]$password
+  ) # EndParam
+  $FunctionName = "Get-NPESQLQueryResult"
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): >>>>>Loading $($FunctionName)" $false
+  # Define local variables
+  [string]$lFN = $MyInvocation.MyCommand.ToString() + ": " # local-FunctionName
+  [string]$lTCFS=""  #local-TryCatchFinallyStatus
+  $Success = $null
+  $QueryTimeout = 120
+  $ConnectionTimeout = 30
+
+  #Action of connecting to the Database and executing the query and returning results if there were any.
+  $conn=New-Object System.Data.SqlClient.SQLConnection
+  $ConnectionString = "Server=$($server);Database=$($database);user id=$($userid);password=$($password);Integrated Security=False;Connect Timeout=$($ConnectionTimeout)"
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): ConnectionString is: $($ConnectionString)" $false
+  $conn.ConnectionString=$ConnectionString
+  $conn.Open()
+  $cmd=New-Object system.Data.SqlClient.SqlCommand($query,$conn)
+  $cmd.CommandTimeout=$QueryTimeout
+  $dd=New-Object system.Data.DataSet
+  $da=New-Object system.Data.SqlClient.SqlDataAdapter($cmd)
+  [void]$da.fill($dd)
+  $conn.Close()
+
+  $dd.Tables
+
+  $dd.Tables.Rows
+
+} # End Function Get-NPESQLQueryResult
+

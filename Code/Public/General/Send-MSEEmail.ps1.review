@@ -1,0 +1,76 @@
+
+#################################################################################################################################################
+# Function Send-NPEEMail                                                                                                     Tested in Section FC
+#################################################################################################################################################
+
+#### WE ARE REMOVING THIS ONE
+<# 
+ .SYNOPSIS 
+	 Function to send E-Mail from PowerShell
+ .DESCRIPTION 
+	 Function to send E-Mail from PowerShell
+ .NOTES 
+     Author       : 	 Jeff Elking
+     Version Date : 	 Version 1.0 - Cleaned up for first NPPC release
+ .PARAMETER <from>
+     A Valid E-Mail address for the sending entity
+ .PARAMETER <to>
+     A Valid E-Mail address for the receiving entity
+ .PARAMETER <subect>
+     A Valid E-Mail subject line for the E-Mail
+ .PARAMETER <$smtphost>
+     A Valid hostname or IP address of the SMTP Gateway
+ .PARAMETER <htmlFileName>
+     Name and location of the file to be used as the body of the E-Mail
+ .EXAMPLE 
+	 Template Example 1
+ .EXAMPLE   
+	 Template Example 2
+#> 
+Function Send-NPEEMail 
+{
+  [CmdletBinding(SupportsShouldProcess=$True)]
+  Param(
+    [Parameter(Mandatory=$True)] [string]$from,
+    [Parameter(Mandatory=$True)] [string]$to,
+    [Parameter(Mandatory=$True)] [string]$subject,
+    [Parameter(Mandatory=$True)] [string]$smtpHost,
+    [Parameter(Mandatory=$True)] [string]$htmlFileName
+  ) # EndParam
+  $FunctionName = "Set-NPEEMail"
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): >>>>>Loading $($Functionname)" $false
+  $Success = $True
+  #
+  Try
+  {
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Entering TRY:" $false
+    Send-MailMessage `
+      -SmtpServer     $smtphost `
+      -Subject        $subject `
+      -To             $to `
+      -From           $from `
+      -Body (-join (gc $htmlFileName)) -BodyAsHtml `
+      -Attachments (dir $htmlFileName)
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Exiting TRY:" $false
+  } # End Try
+  Catch
+  {
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Entering CATCH:" $false
+    $Success = $False
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Exiting CATCH:" $false
+  } # End Catch
+  Finally
+  {
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Entering TRY:" $false
+    If($Success){
+    }else{
+    } # End If
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Exiting TRY:" $false
+  } # End Finally
+  Return $Success
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): <<<<<Exiting $($FunctionName) with result: $($Success))" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+
+} # End Send-NPEEMail
+

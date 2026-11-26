@@ -1,0 +1,48 @@
+#################################################################################################################################################
+# Function Get-MSEAutomationConfiguration                                                                           
+#################################################################################################################################################
+<# 
+   .SYNOPSIS 
+      Will load the Automation Configuration
+
+   .DESCRIPTION 
+      Will load the Automation Configuration
+
+   .PARAMETER
+      None Required.
+
+   .NOTES 
+      Author       : 	Ron Gines
+      Version      :    1.0
+      Date         : 	05/18/2021
+      Description  :    First release
+
+
+   .EXAMPLE   
+	  $Configuration  = Get-MSEAutomationConfiguration
+#>
+Function Get-MSEAutomationConfiguration
+{
+#   [CmdletBinding(SupportsShouldProcess=$True)]
+   [CmdletBinding]
+#   Param ([Parameter(Mandatory=$false)][string]$LogPath)
+   
+#   # Clean up variables and define in-house variables
+#   $FunctionName  = "Get-MSEUniqueTimeStamp"
+   
+#   If ($LogPath -ne $null)
+#   {
+#      If ($LogPath) {Write-MSELogFile $LogPath "$($FunctionName): -------------------------------------" $false}
+#      If ($LogPath) {Write-MSELogFile $LogPath "$($FunctionName): >>>>>Loading" $false}
+#   }
+
+   
+   If (!(Get-Module | Where-Object {$_.Name -eq "MSEConfiguration"})) {
+      Write-Output "I'm importing"
+      Import-Module MSEConfiguration
+   }
+   Get-Module MSEAutomation 
+   Get-Module MSEAutomation | Import-MSEConfiguration -Verbose
+   (get-variable).name
+
+} # End function Get-MSEAutomationConfiguration

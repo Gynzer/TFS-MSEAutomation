@@ -1,0 +1,39 @@
+#################################################################################################################################################
+# Function Convert-NPEFromSecureStringToPlain                                                                                Tested in Section EO
+#################################################################################################################################################
+<# 
+ .SYNOPSIS 
+	 Function to add the password to a hashfile stored in the variable $Global:NPPC_PasswordHashDirectory
+ .DESCRIPTION 
+	 Function to add the password to a hashfile stored in the variable $Global:NPPC_PasswordHashDirectory.   The 
+     file name is assumed to be the format of <machinename>-<userid>.hash
+
+ .NOTES 
+     Author       : 	 Ron Gines
+     Version Date : 	 Version 1.0 - Cleaned up for first NPPC release
+ .PARAMETER <SecurePassword>
+     This is a secure password that needs converted to a PLan Text Password
+ .EXAMPLE   
+	 ConvertFrom-SecureToPlain $MySecurePassword
+#> 
+   
+function Convert-NPEFromSecureStringToPlain 
+{
+  [CmdletBinding(SupportsShouldProcess=$True)]
+  Param(
+    [Parameter(Mandatory=$True)] [System.Security.SecureString]$SecurePassword
+  ) # EndParam
+  # Create a "password pointer"
+  $PasswordPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecurePassword)
+    
+  # Get the plain text version of the password
+  $PlainTextPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto($PasswordPointer)
+    
+  # Free the pointer
+  [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($PasswordPointer)
+    
+  # Return the plain text password
+  Return $PlainTextPassword
+    
+} # End Function Convert-NPEFromSecureStringToPlain
+

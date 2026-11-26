@@ -1,0 +1,81 @@
+
+#################################################################################################################################################
+# Function Test-NPEActiveDirectoryObjectExistence                                                                        
+#################################################################################################################################################
+<# 
+ .SYNOPSIS 
+     Function to check if an objects existing in Active Directory - Returns True or False
+
+ .DESCRIPTION 
+     Function to check if an objects existing in Active Directory - Returns True or False
+
+ .NOTES 
+     Author       : 	 Ron Gines
+     Version Date : 	 Version 1.0 - Cleaned up for first NPPC release
+     Adapted From :      
+
+ .PARAMETER <ObectName>
+     THis is the name of the obejct we are checking on in AD
+
+ .PARAMETER <OUPath>
+     OU Path in AD
+
+ .PARAMETER <Type>
+     Valid values are "User","Computer","Group","OrganizationalUnit"
+
+ .EXAMPLE 
+     $GroupCollection = TestADObjectExistence "PUClausSa" "User"
+#> 
+function Test-NPEActiveDirectoryObjectExistence
+{
+  [CmdletBinding(SupportsShouldProcess=$True)]
+  Param(
+    [Parameter(Mandatory=$True)] [string]$Name,
+    [Parameter(Mandatory=$True)] [string]$OUPath,
+    [Parameter(Mandatory=$True)] [string]$Type
+  ) # EndParam
+  $FunctionName = "Test-NPEActiveDirectoryObjectExistence"
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): >>>>>Loading" $false
+  Switch ($Type)
+    {  
+      "Group" {
+        $Success = $true
+        Try {Get-ADGroup $Name}
+        Catch {$Success = $false}
+        Log-NPEWrite $ScriptLogFullName "$($FunctionName): Group $($Name) found status: $($Success)" $true
+        }
+      "User" {
+        $Success = $true
+        Try {Get-ADUser $Name}
+        Catch {$Success = $false}
+        Log-NPEWrite $ScriptLogFullName "$($FunctionName): User $($Name) found status: $($Success)" $true
+        }
+      "Computer" {
+        $Success = $true
+        Try {Get-ADComputer $Name}
+        Catch {$Success = $false}
+        Log-NPEWrite $ScriptLogFullName "$($FunctionName): Computer $($Name) found status: $($Success)" $true
+        }
+      "OrganizationalUnit" {
+          $seek = [System.DirectoryServices.DirectorySearcher]$OUPath
+          $seek.Filter = “(&(name=$name)(objectCategory=$Type))”
+          $Result = $seek.FindOne()
+          If( $Result -eq $null)
+          {
+            $Success = $false
+          }Else{
+            $Success = $true
+          } # EndIf
+        }Else{
+#          Log-NPEError $ScriptLogFullName "$($FunctionName): Incorrect Type was specified."
+#          Log-NPEError -LogPath $ScriptLogFullName -ErrorDesc "$($FunctionName): $($_.Exception)"
+          $Success = $False
+          Log-NPEWrite $ScriptLogFullName "$($FunctionName): OU $($Name) found status: $($Success)" $true
+        } # EndIf
+    }
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): <<<<<Exiting $($FunctionName) with result: $($Result))" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  Return $Success
+} # End Function Test-NPEActiveDirectoryObjectExistence
+  

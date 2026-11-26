@@ -1,0 +1,45 @@
+#################################################################################################################################################
+# Function Remove-NPEEnvironmentVariablePath                                                                                 Tested in Section FF
+#################################################################################################################################################
+# This needs work
+
+<# 
+ .SYNOPSIS 
+	 Function to Delete a directory from a system environmental variable
+ .DESCRIPTION 
+	 Function to delete a directory from a system environmental variable
+ .NOTES 
+     Author       : 	 Adapter by Ron Gines from  http://blogs.technet.com/b/heyscriptingguy/archive/2011/07/23/use-powershell-to-modify-your-environmental-path.aspx
+     Version Date : 	 Version 1.0 - Cleaned up for first NPPC release
+ .PARAMETER <DeletedFolder>
+     Folder to be added to Environmental Variable
+ .PARAMETER <EnvironmentVariable>
+     A Valid E-Mail address for the receiving entity
+ .EXAMPLE 
+	 Template Example 1
+#> 
+Function Remove-NPEEnvironmentVariablePath
+{
+  [Cmdletbinding()]
+  param
+    ( 
+      [Parameter(Mandatory=$True)] [String]$EnvironmentVariable,
+      [Parameter(Mandatory=$True)] [String]$DeletedFolder
+    )
+
+  # Get the Current Search Path from the environment keys in the registry
+  $NewPath=(Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name $($EnvironmenVariable)).Path
+
+  # Find the value to remove, replace it with $NULL. If it’s not found, nothing will change.
+  $NewPath=$NewPath –replace $DeletedFolder,$NULL
+
+  # Update the Environment Path
+  Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name $($EnvironmentVariable) –Value $newPath
+
+Write-Host "DELETE-FUNCTION:  $($EnvPath)"
+
+
+  # Show what we just did
+  Return $NewPath
+
+} # End Remove-NPEEnvironmentVariablePath

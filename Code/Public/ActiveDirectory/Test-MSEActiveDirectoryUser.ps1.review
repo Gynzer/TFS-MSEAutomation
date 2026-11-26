@@ -1,0 +1,63 @@
+#################################################################################################################################################
+# Function Test-NPEActiveDirectoryUser                                                                                       Tested in Section DP
+#################################################################################################################################################
+<#
+ .SYNOPSIS
+    This function verifies if the passed username exists in the Active Directory environment in which the machine is a member
+ .DESCRIPTION
+    Returns true if the user exists, and false if the user cannot be found
+ .NOTES 
+     Author       : 	 Borrowed from BTC
+     Version Date : 	 Version 1.0 - Adapted for use in NPPC scripts
+ .EXAMPLE
+    $UserExists = Test-NPEActiveDirectoryUser TestUser
+#>  
+Function Test-NPEActiveDirectoryUser
+{
+  [CmdletBinding(SupportsShouldProcess=$True)]
+  Param(
+    [Parameter(Mandatory=$True)] [string]$SearchForUser # like userid 
+  ) # EndParam
+  # Define local variables
+  $FunctionName = "Test-NPEActiveDirectoryUser"
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): >>>>>Loading" $false
+  [boolean]$Result = $False
+  $DomainContext=(Get-ADRootDSE).defaultNamingContext
+  # 
+  Try 
+  {
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Entering TRY:" $false
+    If ($DomainContext -eq "") {
+      Log-NPEError $ScriptLogFullName "Domain cannot be identified."
+    } # EndIf
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Try to find user: $($SearchForUser)"  $true
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): AD Namespace LDAP://$DomainContext"  $true
+    $domain = [adsi]"LDAP://$($DomainContext)"
+    $searcher = New-Object System.DirectoryServices.DirectorySearcher $domain
+    $searcher.Filter = '(&(objectClass=User)(sAMAccountName={0}))'.Replace("{0}",$SearchForUser)
+    $userResult = $searcher.FindOne()
+    If($userResult -ne $null) {
+       Log-NPEWrite $ScriptLogFullName  "Found User in Path='$($userResult.Path)'"
+       $Result = $True
+    } Else {
+      Log-NPEError $ScriptLogFullName "Could not find user='$($SearchForUser)' In Domain '$($DomainContext)'"
+    } # EndIf
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Exiting TRY:" $false
+  } # EndTry
+  Catch 
+  {
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Entering CATCH:" $false
+    Log-NPEWrite $ScriptLogFullName "Cannot Find User=$($SearchForUser) in $($DomainContext)"
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Exiting CATCH:" $false
+  } # EndCatch
+  Finally 
+  {
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Entering FINALLY:" $false
+    # XXX Add code here
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Exiting FINALLY:" $false
+  }# EndFinally
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): <<<<<Exiting $($FunctionName) with result: $($Result))" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  Return $Result
+} # End Test-NPEActiveDirectoryUser

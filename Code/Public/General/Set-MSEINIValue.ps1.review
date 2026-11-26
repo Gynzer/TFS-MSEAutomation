@@ -1,0 +1,66 @@
+################################################################################
+# Function Set-NPEINIValue                                   Tested in Section IJ
+################################################################################
+
+<#
+ .SYNOPSIS
+    Set a value in an INI file for a specific SectionName and KeyName
+ .DESCRIPTION
+    Set an entry from an INI file. 
+    Return true on success
+ .NOTES 
+     Author       : 	 Borrowed from BTC
+     Version Date : 	 Version 1.0 - Adapted for use in NPPC scripts
+ .EXAMPLE
+    Set-WCLINIValue <PathToINIFile> <SectionName> <KeyName> <value>
+ .EXAMPLE
+    Set-WCLINIValue -file "C:\Temp\Test.INI" -section "Cat1" -key "Key1" -value "Val1"
+    Before - C:\Temp\Test.Ini
+    [Cat1]
+    Key1="This is the first key of Cat1"
+    Key2="This is the second key of Cat1"
+    [Cat2]
+    Key1="This is the first key of Cat2"
+    Key2="This is the second key of Cat2"
+    Write a string stored in C:\Temp\Test.Ini in section Cat1, keyname of Key1 with a string of "Val1"
+    After - C:\Temp\Test.Ini
+    [Cat1]
+    Key1="Val1"
+    Key2="This is the second key of Cat1"
+    [Cat2]
+    Key1="This is the first key of Cat2"
+    Key2="This is the second key of Cat2"
+#>  
+Function Set-NPEINIValue 
+{
+  [CmdletBinding(SupportsShouldProcess=$True)]
+  Param(
+    [Parameter(Mandatory=$True)] [string]$file, 
+    [Parameter(Mandatory=$True)] [string]$section, 
+    [Parameter(Mandatory=$True)] [string]$key, 
+    [Parameter(Mandatory=$True)] [string]$value = ""
+  ) # EndParam 
+  # Define local variables
+  [string]$lFN = $MyInvocation.MyCommand.Name.ToString() + ": " # local-FunctionName
+  [string]$lTCFS=""  #local-TryCatchFinallyStatus
+  Write-Log ("-------------------------------------") 
+  Write-Log (">>>>>Loading") 
+  [boolean]$Local:Result = $False    
+  #
+  # Prepare the parameter types and parameter values for the Invoke-WindowsApi script 
+  $parameterTypes = [string], [string], [string], [string] 
+  $parameters = [string] $section, [string] $key, [string] $value, [string] $file 
+  #
+  # Invoke the API 
+  $Local:ReturnValue = Invoke-WindowsApi "kernel32.dll" ([UInt32]) "WritePrivateProfileString" $parameterTypes $parameters
+  Write-Log ("WritePrivateProfileString returnvalue="+ $local:ReturnValue)
+  If ($local:ReturnValue -ne 0) {
+    $Local:Result = $True
+  } # EndIf
+  #
+  Write-Log ("<<<<<Exiting with result="+ $local:Result)
+  Write-Log ("-------------------------------------")
+  # [string]$lFN = "???" # local-FunctionName
+  Return $local:Result
+} # End Set-NPEINIValue
+

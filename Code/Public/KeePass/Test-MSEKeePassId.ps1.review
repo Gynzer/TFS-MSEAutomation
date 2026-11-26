@@ -1,0 +1,88 @@
+#################################################################################################################################################
+# Function Test-NPEKeePassID                                                                                                 Tested in Section KC
+#################################################################################################################################################
+<# 
+ .SYNOPSIS 
+	 Test for the existence of an ID within KeePass
+ .DESCRIPTION 
+	 Test for the existence of an ID within KeePass
+     
+     ====================================================================
+     NOTE:   This function will find an ID in KeePass even if it has been 
+     deleted but it still present in the Recycle Bin of the KeePass file.
+     ====================================================================
+     
+ .NOTES 
+     Author       : 	 Ron Gines
+     Version Date : 	 Version 1.0 - Cleaned up for first NPPC release
+     Version Date : 	 Version 1.1 - Added Key File Authentication
+ .PARAMETER <username>
+     This is the Pre-Windwos2000 user ID for a user which may be in Active 
+     Directory and cataloged in a KeePass file.
+ .PARAMETER <KPFile>
+     This is the fully qualified directory and filename of the target 
+     KeePass file.
+ .PARAMETER <KPPassword>
+     This is the password required to access the KeePass file.
+ .PARAMETER <KPDir>
+     This is the fully qualified directory path to the KPScript.exe file.
+ .EXAMPLE 
+	 if ((Test-NPEKeePassID  "PUClausSa "G:\MESAPPS\TempKeePass.kdbx" "Th1s1saF1n3M355" "G:\MESAPPS\COMMON\RPMISC\PowerShell\Keepass") -eq $true)
+     The if the ID PUClausSa is in the KeePass file, then the returned 
+     result will be $true
+#> 
+Function Test-NPEKeePassID
+{
+  [CmdletBinding(SupportsShouldProcess=$True)]
+  Param(
+    [Parameter(Mandatory=$True)] [string]$username,
+    [Parameter(Mandatory=$True)] [string]$KPFile,
+    [Parameter(Mandatory=$True)] [string]$KPPassword,
+    [Parameter(Mandatory=$True)] [string]$KPDir,
+    [string]$KPFileKey
+  ) # EndParam
+  $FunctionName = "Test-NPEKeePassID"
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): Loading $($FunctionName)" $false
+  [boolean]$Result = $False
+  Try 
+  {
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Entering TRY:" $false
+    if($KPFileKey){
+       $TempKP = $KPDir + '\kpscript.exe -c:GetEntryString "' + $KPFile + '" -pw:"' + $KPPassword + '" -Field:UserName -ref-UserName:"' + $username  + '" -keyfile:"' + $KPFileKey + '"'
+    }Else{
+       $TempKP = $KPDir + '\kpscript.exe -c:GetEntryString "' + $KPFile + '" -pw:"' + $KPPassword + '" -Field:UserName -ref-UserName:"' + $username  + '"'
+    }
+#Write-Host $TempKP
+    $TempKPOut = [string](Invoke-Expression -Command $TempKP)
+#Write-Host $TempKPOut
+#    if (($TempKPOut.StartsWith($username)) -or ($TempKPOut.StartsWith("OK"))) { 
+    if ($TempKPOut.StartsWith($username)) { 
+      Log-NPEWrite $ScriptLogFullName "$($FunctionName): $username exists in KeePass" $false
+      $Result = $true
+    }else{
+      Log-NPEWrite $ScriptLogFullName "$($FunctionName): $username does not exist in KeePass" $false
+      $Result = $false
+    } #EndIf
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Exiting TRY:" $false
+  } # EndTry
+  Catch 
+  {
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Entering CATCH:" $false
+    Log-NPEError $ScriptLogFullName "$($FunctionName): Finding $username in KeePass failed." 
+    $Result = $false
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Exiting CATCH:" $false
+  } # EndCatch
+  Finally 
+  {
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Entering FINALLY:" $false
+    #
+    # XXX Add code here
+    #
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Exiting FINALLY:" $false
+  } # EndFinally
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): <<<<<Exiting $($FunctionName) with result: $($Result)" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  Return $Result
+} # End Function Test-NPEKeePassID
+   

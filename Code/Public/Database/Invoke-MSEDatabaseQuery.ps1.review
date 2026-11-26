@@ -1,0 +1,80 @@
+#################################################################################################################################################
+# Function Invoke-NPEDatabaseQuery                                                                                                     SECTION HJ
+#################################################################################################################################################
+
+<#
+ .SYNOPSIS
+    This function will do something.
+ .DESCRIPTION
+    THis function will do the most awsome something sometime.
+ .NOTES 
+     Author       : 	 Written by someone
+     Version      : 	 Version 1.0 
+     Date         :      01/01/1776
+     Purpose      :      We didn't like what it did before.
+ .PARAMETER <Parm1>
+     Pre
+ .PARAMETER <Parm2>
+     Pre
+ .PARAMETER <Description>
+     Pre
+ .PARAMETER <WhatShaMaCallIt>
+     Pre
+ .EXAMPLE
+    
+#>  
+function Invoke-NPEDatabaseQuery {
+  [CmdletBinding()]
+  param (
+    [string]$connectionString,
+    [string]$query,
+    [switch]$isSQLServer
+  )
+  $FunctionName = "Invoke-NPEDatabaseQuery"
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): >>>>>Loading $($FunctionName)" $false
+  [boolean]$Result = $False
+  Try 
+  {
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Entering TRY:" $false
+    if ($isSQLServer) {
+      Log-NPEWrite $ScriptLogFullName "$($FunctionName): in SQL Server mode:" $false
+      $connection = New-Object -TypeName System.Data.SqlClient.SqlConnection
+    } else {
+      Log-NPEWrite $ScriptLogFullName "$($FunctionName): in OleDB mode:" $false
+      $connection = New-Object -TypeName System.Data.OleDb.OleDbConnection
+    }
+    $connection.ConnectionString = $connectionString
+    $command = $connection.CreateCommand()
+    $command.CommandText = $query
+    $connection.Open()
+    $command.ExecuteNonQuery()
+    $connection.close()
+    $Result = $true
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Our DB Query Worked!!!!" $true
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Exiting TRY:" $false
+  } # EndTry
+  Catch 
+  {
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Entering CATCH:" $false
+    #
+    # Add Code Here
+    #
+    $Return = $false
+    Log-NPEError $ScriptLogFullName "$($FunctionName): It Didn't Work!!!!"
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Exiting CATCH:" $false
+  } # EndCatch
+  Finally 
+  {
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Entering FINALLY:" $false
+    #
+    # XXX Add code here
+    #
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Exiting FINALLY:" $false
+  } # EndFinally
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): <<<<<Exiting $($FunctionName) with result: $($Result))" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  Return $Result
+} # End Function Invoke-NPEDatabaseQuery
+
+

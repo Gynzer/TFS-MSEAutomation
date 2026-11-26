@@ -1,0 +1,1 @@
+kpscript -c:ListEntries "\\usstll0032\msedeployment\KeePass\databases\ginestestdb.kdbx" -pw:pa$$word

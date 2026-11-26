@@ -1,0 +1,104 @@
+#################################################################################################################################################
+# Function Read-NPEWebPage                                                                                              
+#################################################################################################################################################
+<# 
+ .SYNOPSIS 
+	Function to read the contents from Web Service for further processing.
+ .DESCRIPTION 
+	Function will send a query to Tomcat or some other web service and return the page contents.   If UserId and Password are supplied, those will be used in the connection.
+ .NOTES 
+     Author       : 	 Ron Gines
+     Version Date : 	 Version 1.0 - 10/6/2015
+ .PARAMETER <URL>
+     This will be the fully formed URL query in the format "HTTP://....."
+ .PARAMETER <URLUserID>
+     This will be the UserID for the query, if needed.
+ .PARAMETER <URLPassword>
+     This will be the password for the query, if needed. (Clear Text)
+
+ .EXAMPLE   
+	$WebResult = Read-NPEWebPage "http://usstll8325.nestle.com:8083/manager/text/list" $MyUserID $MyTextPassword
+
+	$WebResult.Success will be $True if Successful, and $False otherwise
+	$WebResult.Page will hold the HTML or Page return from the URL query.
+
+#> 
+  
+Function Read-NPEWebPage
+{
+   [CmdletBinding(SupportsShouldProcess=$True)]
+   Param(
+     [Parameter(Mandatory=$True)] [string]$URL,
+     [string]$URLUserID,
+     [string]$URLPassword
+   ) # EndParam
+   $FunctionName = "Read-NPEWebPage"
+   Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+   Log-NPEWrite $ScriptLogFullName "$($FunctionName): >>>>>Loading" $false
+   $WebResult = @{}
+   $URL         = $URL.trim()
+   $URLUserID   = $URLUserID.trim()
+   $URLPassword = $URLPassword.trim()
+
+   If ($($URLUserID.Length) -gt 0)
+   {
+      If ($($URLPassword.Length) -gt 0)
+      {
+         Log-NPEWrite $ScriptLogFullName "$($FunctionName): Both ID and PW have been supplied." $True
+         $creds                  = new-object System.Net.networkCredential($URLUserID, $URLPassword)
+         $credCache              = new-object System.Net.CredentialCache
+         $webclient              = new-object System.Net.WebClient
+         $credCache.Add($URL,"Basic",$creds)
+         $webclient.Credentials  = $credCache
+          Try
+         {
+            $webpage                = $webclient.DownloadString($URL)
+            Log-NPEWrite $ScriptLogFullName "$($FunctionName): web Page Successfully read." $True
+            $WebResult.WebPage = $webpage
+            $WebResult.Success = $true
+         } # Try
+         Catch
+         {
+            Log-NPEWrite $ScriptLogFullName "$($FunctionName): Web Page read FAILED." $True
+            $WebResult.WebPage = $null
+            $WebResult.Success = $false
+         } # Catch    
+      } #End If
+      Else
+      {
+         # Only ID
+         Log-NPEWrite $ScriptLogFullName "$($FunctionName): Only ID has been supplied.  Please provide a password." $True
+         $WebResult.WebPage = $null
+         $WebResult.Success = $false
+      } # Else
+   } # If
+   Else
+   {      
+      If ($URLPassword.Length -gt 0)
+      {
+         # Only PW
+         Log-NPEWrite $ScriptLogFullName "$($FunctionName): Only a password was supplied.  Please Provide a userid." $True
+         $WebResult.WebPage = $null
+         $WebResult.Success = $false
+      }
+      Else
+      {
+         # This is the Good result (no ID or PW)
+         $webclient = new-object System.Net.WebClient
+         Try
+         {
+            $webpage                = $webclient.DownloadString($URL)
+            Log-NPEWrite $ScriptLogFullName "$($FunctionName): Web Page Successfully read." $True
+            $WebResult.WebPage = $webpage
+            $WebResult.Success = $true
+         } # Try
+         Catch
+         {
+            Log-NPEWrite $ScriptLogFullName "$($FunctionName): Web Page read FAILED." $True
+            $WebResult.WebPage = $null
+            $WebResult.Success = $false
+         } # Catch    
+      } # Else
+   } # Else
+   return, $WebResult
+} # Function  Read-NPEWebPage

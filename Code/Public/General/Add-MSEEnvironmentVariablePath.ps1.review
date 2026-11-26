@@ -1,0 +1,59 @@
+
+#################################################################################################################################################
+# Function Add-NPEEnvironmentVariablePath                                                                                    Tested in Section FD
+#################################################################################################################################################
+# This needs work
+<# 
+ .SYNOPSIS 
+	 Function to add a directory to a system environmental variable
+ .DESCRIPTION 
+	 Function to add a directory to a system environmental variable
+ .NOTES 
+     Author       : 	 Adapter by Ron Gines from  http://blogs.technet.com/b/heyscriptingguy/archive/2011/07/23/use-powershell-to-modify-your-environmental-path.aspx
+     Version Date : 	 Version 1.0 - Cleaned up for first NPPC release
+ .PARAMETER <AddedFolder>
+     Folder to be added to Environmental Variable
+ .PARAMETER <EnvironmentVariable>
+     An environment variable
+ .EXAMPLE 
+	 Template Example 1
+#> 
+Function Add-NPEEnvironmentVariablePath
+{
+  [Cmdletbinding()]
+  param
+    ( 
+      [Parameter(Mandatory=$True)] [String]$EnvironmentVariable,
+      [parameter(Mandatory=$True)] [String[]]$AddedFolder
+    )
+Write-Host "EnvironmentVariable: $EnvironmentVariable"
+$CurrentVariable=(Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name $($EnvironmentVariable)).Path
+Write-Host "Current Variable: $($CurrentVariable)"
+  # Get the current search path from the environment keys in the registry.
+  #  $OldPath=(Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name $($EnvironmentVariable)).Path
+  $OldPath = [environment]::GetEnvironmentVariable($EnvironmentVariable,"Machine")
+  # See if a new folder has been supplied.
+Write-Host "Old Path: $($OldPath)"
+  If (!$AddedFolder)
+    { Return ‘No Folder Supplied. $($EnvironmentVariable) Unchanged’ }
+
+  # See if the new folder exists on the file system.
+  If (!(TEST-PATH $AddedFolder))
+    { Return ‘Folder Does not Exist, Cannot be added to $($EnvironmentVariable)’ }
+
+  # See if the new Folder is already in the path.
+  #  If ($ENV:$EnvironmentVariable | Select-String -SimpleMatch $AddedFolder)
+  If (([environment]::GetEnvironmentVariable($EnvironmentVariable,"Machine")) | Select-String -SimpleMatch $AddedFolder)
+    { Return ‘Folder already within $($EnvironmentVariable)’}
+
+  # Set the New Path
+  $NewPath=$OldPath+’;’+$AddedFolder
+Write-Host "New Path: $($NewPath)"
+  # Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\ConSet Testrol\Session Manager\Environment' -Name PATH –Value $newPath
+  [Environment]::SetEnvironmentVariable($EnvironmentVariable, $AddedFolder, "Machine")
+  # Show our results back to the world
+
+Write-Host "ADD-FUNCTION:  $($EnvPath)"
+
+  Return $NewPath
+} # End Add-NPEEnvironmentVariablePath

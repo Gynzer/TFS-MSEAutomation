@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>MSEAutomation</id>
+    <title>MSEAutomation</title>
+    <version>0.0.4</version>
+    <authors>Ron Gines</authors>
+    <owners>Thermo Fisher Scientific</owners>
+    <description>A PowerShell Infrastructure platform to facilitate the Automation of OT devices and systems.</description>
+    <summary>A PowerShell Infrastructure platform to facilitate the Automation of OT devices and systems.</summary>
+    <tags>MSE Automation Module</tags>
+    <projectUrl>https://github.com/Ron-Gines/MSEAutomation</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <contentFiles>
+      <files include="*" />
+    </contentFiles>
+  </metadata>
+</package>
+

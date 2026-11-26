@@ -1,0 +1,59 @@
+   
+#################################################################################################################################################
+# Function Find-NPEMESAPPSPropertyParameter                                                                                  Tested in Section EB
+#################################################################################################################################################
+<#  REWRITE!!!
+ .SYNOPSIS 
+	 Function to confirm a value to a key within an INI file. ???????????
+ .DESCRIPTION 
+	 ????????????? This function will take as input, a file, a key parameter and a new key value.
+ .NOTES 
+     Author       : 	 Ron Gines
+     Version Date : 	 Version 1.0 - Cleaned up for first NPPC release
+ .PARAMETER <file>
+     This is a full path or URL to a file
+ .PARAMETER <key>
+     This is a key parameter as it is found in the INI file.
+ .PARAMETER <keyvalue>
+     This is the new value that should be applied to the key parameter in the INI file
+ .EXAMPLE 
+	 $Result = Find-NPEMESAPPSPropertyParameter "C:\Temp\Test.ini" "User" "PUClausSa"
+#> 
+function Find-NPEMESAPPSPropertyParameter
+{
+  [CmdletBinding(SupportsShouldProcess=$True)]
+  Param(
+    [Parameter(Mandatory=$True)] [string]$file,
+    [Parameter(Mandatory=$True)] [string]$key,
+    [Parameter(Mandatory=$True)] [string]$keyvalue
+  ) # EndParam
+  # Define local variables
+  $FunctionName = "Get-NPEINIFile"
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): >>>>>Loading $($FunctionName)" $false
+  $EverythingOK = 0
+  Try
+    {
+      $content = Get-Content $file
+      if ( $content -match "^$key\s*" ){
+        $EverythingOK = $EverythingOK + 1
+      } # End If
+      If ( $content -match "=*$keyvalue" ){
+       $EverythingOK = $EverythingOK + 2
+       } # End If
+    } # End Try
+  catch [System.Exception] 
+    {
+      Write-Host "Could not read file ... $_.Exception.Message" -backgroundcolor "Red"
+      Return $EverythingOK
+    } # End Catch
+  Finally 
+    {
+      Log-NPEWrite $ScriptLogFullName "$($FunctionName): In Final Stage" $false
+    } # End Finally
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): <<<<<Exiting $($FunctionName) with result: $($Result))" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  return $EverythingOK
+} # End Find-NPEMESAPPSConfigParameter
+
+

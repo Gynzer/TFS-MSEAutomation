@@ -1,0 +1,85 @@
+#################################################################################################################################################
+# Function End-MSEScript                                                                                                   
+#################################################################################################################################################
+<#
+  .SYNOPSIS
+    Write closing logging data & exit
+
+  .DESCRIPTION
+    Writes finishing logging data to specified log and then exits the calling script
+  
+  .PARAMETER LogPath
+    Mandatory. Full path of the log file you want to write finishing data to. Example: C:\Windows\Temp\Test_Script.log
+
+  .PARAMETER ScriptExit
+    Optional. If this is set to True, then the function will not exit the calling script, so that further execution can occur
+  
+  .INPUTS
+    Parameters above
+
+  .OUTPUTS
+    None
+
+  .NOTES
+    Version:        1.0
+    Author:         Luca Sturlese
+    Creation Date:  10/05/12
+    Purpose/Change: Initial function development
+    
+    Version:        1.1
+    Author:         Luca Sturlese
+    Creation Date:  19/05/12
+    Purpose/Change: Added debug mode support
+  
+    Version:        1.2
+    Author:         Luca Sturlese
+    Creation Date:  01/08/12
+    Purpose/Change: Added option to not exit calling script if required (via optional parameter)
+
+    Version:        1.3
+    Author: 	    Ron Gines
+    Date:           02/05/2015
+    Change: 	    Cleaned up for use in first NPPC release
+
+    Version:        1.4
+    Author: 	    Ron Gines
+    Date:           04/14/2021
+    Change: 	    Cleaned up for use in first NPPC release
+
+  .EXAMPLE
+    End-MSEScript -LogPath "C:\Windows\Temp\Test_Script.log"
+
+  .EXAMPLE
+    End-MSEScript -LogPath $MyLogPath -ScriptExit $True
+
+  .EXAMPLE
+    End-MSEScript -LogPath "C:\Windows\Temp\Test_Script.log" -ScriptExit $False
+#>
+Function End-MSEScript
+{
+  [CmdletBinding(SupportsShouldProcess=$True)]
+  Param ([Parameter(Mandatory=$true)][string]$LogPath, 
+         [Parameter(Mandatory=$false)][bool]$ScriptExit = $true
+  )
+  
+    $FunctionName = "End-MSEScript"
+    If (!(Test-Path -Path $LogPath)){
+        (Add-Content -Path $LogPath -Value "***************************************************************************************************")
+        (Add-Content -Path $LogPath -Value "Started processing at [$([DateTime]::Now)].")
+        (Add-Content -Path $LogPath -Value "***************************************************************************************************")
+    }
+
+    Close-MSELogFile $LogPath 
+
+    #Write to screen for debug mode
+    Write-Debug "" 
+    Write-Debug "***************************************************************************************************"
+    Write-Debug "Finished processing at [$([DateTime]::Now)]."
+    Write-Debug "***************************************************************************************************"
+  
+    #Exit calling script if ScriptExit has been set to true
+    If($ScriptExit){
+      Exit
+    }    
+} # End Function End-MSEScript
+

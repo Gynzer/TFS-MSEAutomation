@@ -1,0 +1,132 @@
+#################################################################################################################################################
+# Function Get-NPEINIFile                                                                                                    Tested in Section ED
+#################################################################################################################################################
+##<# 
+## .SYNOPSIS 
+##     Returns the kays and values of an INI file
+## .DESCRIPTION 
+##     Returns the kays and values of an INI file 
+## .NOTES 
+##     Author       : 	 Ron Gines
+##     Version Date : 	 Version 1.0 - Cleaned up for first NPPC release
+## .PARAMETER <file>
+##     This is a full path or URL to a file
+## .EXAMPLE 
+##	 $ResultINI = Get-MESIniFile "C:\Temp\Test.ini"
+###> 
+##function Get-NPEINIFile
+##{
+##  [CmdletBinding(SupportsShouldProcess=$True)]
+##  Param(
+##    [Parameter(Mandatory=$True)] [string]$File
+##  ) # EndParam
+##Write-Host "Need to rethink the process here." -foregoundcolor "Red"
+##  $FunctionName = "Get-NPEINIFile"
+##  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+##  Log-NPEWrite $ScriptLogFullName "$($FunctionName): >>>>>Loading $($FunctionName)" $false
+##  $ini = @{}
+##  switch -regex -file $File {
+##    "^\s*([^#].+?)\s*=\s*(.*)" {
+##    $name,$value = $matches[1..2]
+##    $ini[$name] = $value.trim()
+##    } # End Codeblock
+##  } # End Codeblock
+##  Log-NPEWrite $ScriptLogFullName "$($FunctionName): <<<<<Exiting $($FunctionName) with result: $($Result))" $false
+##  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+##  Return $ini
+##} # End Get-NPEINIFile
+<#  
+  .Synopsis  
+    Gets the content of an INI file  
+  .Description  
+    Gets the content of an INI file and returns it as a hashtable  
+  .Notes  
+    Author        : Oliver Lipkau <oliver@lipkau.net>  
+    Blog          : http://oliver.lipkau.net/blog/  
+    Source        : https://github.com/lipkau/PsIni 
+                    http://gallery.technet.microsoft.com/scriptcenter/ea40c1ef-c856-434b-b8fb-ebd7a76e8d91 
+    Version       : 1.0 - 2010/03/12 - Initial release  
+                  : 1.1 - 2014/12/11 - Typo (Thx SLDR) Typo (Thx Dave Stiff) 
+      
+    Author        : Ron Gines
+    Version       : 1.2 - 2015/03/02 - Rewrote to work with NPE Environment
+
+    #Requires -Version 2.0  
+  .Inputs  
+    System.String  
+  .Outputs  
+    System.Collections.Hashtable  
+  .Parameter FilePath  
+    Specifies the path to the input file.  
+  .Example  
+    $FileContent = Get-IniContent "C:\myinifile.ini"  
+    -----------  
+    Description  
+    Saves the content of the c:\myinifile.ini in a hashtable called $FileContent  
+      
+  .Example  
+    $inifilepath | $FileContent = Get-IniContent  
+    -----------  
+    Description  
+    Gets the content of the ini file passed through the pipe into a hashtable called $FileContent  
+      
+  .Example  
+    C:\PS>$FileContent = Get-IniContent "c:\settings.ini"  
+    C:\PS>$FileContent["Section"]["Key"]  
+    -----------  
+    Description  
+    Returns the key "Key" of the section "Section" from the C:\settings.ini file  
+          
+  .Link  
+    Out-IniFile  
+#>  
+Function Get-NPEIniFile 
+{  
+  [CmdletBinding()]  
+  Param(  
+    [ValidateNotNullOrEmpty()]  
+    [ValidateScript({(Test-Path $_) -and ((Get-Item $_).Extension -eq ".ini")})]  
+    [Parameter(ValueFromPipeline=$True,Mandatory=$True)]  
+    [string]$FilePath  
+  )  
+  $FunctionName = "Get-NPEINIFile"
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): >>>>>Loading $($FunctionName)" $false
+      
+  $ini = @{}  
+  switch -regex -file $FilePath  
+  {  
+    "^\[(.+)\]$" # Section  
+    {  
+      $section = $matches[1]  
+      $ini[$section] = @{}  
+      $CommentCount = 0  
+    }  
+    "^(;.*)$" # Comment  
+    {  
+      if (!($section))  
+      {  
+        $section = "No-Section"  
+        $ini[$section] = @{}  
+      }  
+      $value = $matches[1]  
+      $CommentCount = $CommentCount + 1  
+      $name = "Comment" + $CommentCount  
+      $ini[$section][$name] = $value  
+    }   
+    "(.+?)\s*=\s*(.*)" # Key  
+    {  
+      if (!($section))  
+      {  
+        $section = "No-Section"  
+        $ini[$section] = @{}  
+      }  
+      $name,$value = $matches[1..2]  
+      $ini[$section][$name] = $value  
+    }  
+  }  
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): <<<<<Exiting $($FunctionName) with result: $($Result))" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  Return,$ini  
+} # End Get-NPEIniFile
+

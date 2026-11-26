@@ -1,0 +1,47 @@
+
+# Determine Default Configuration file.
+# Get the module install patch
+#$MyModuleRoot = (get-module MSEAutomation).ModuleBase 
+$MyModuleRoot = "C:\Program Files\WindowsPowerShell\Modules\MSEAutomation"
+$MyModuleRoot
+$MyConfig = join-path $MyModuleRoot "Configuration.psd1"
+$MyConfig
+$Return=$false
+If (Test-Path $MyConfig) {
+   # We assume default configuration is in place
+}else{
+   $MyTemplates =  get-childitem -path $MyModuleRoot -Filter "Configuration.*.psd1"
+   If ($MyTemplates.count -eq 0){
+      Write-Host "No templates found.   We need a default configuration to continue"
+      $MyConfig = ""
+      $Done = $true
+	  $Return=$false
+      exit
+   }
+   elseif ($MyTemplates.count -eq 1){
+      Copy-Item $MyTemplates.FullName $MyConfig
+      $Done = $true
+	  If (Test-Path $MyConfig){$Return=$true}
+   }else{
+      Write-Host "Multiple configurations were found" -ForegroundColor Yellow
+      Write-Host "Please select a default configuration for this device" -ForegroundColor Yellow
+      $MyDisplay = $MyTemplates.Name | Foreach-Object {$_.Split(".")[1]}
+        for($i = 0; $i -lt $MyDisplay.count; $i++){
+            Write-Host "$($i): $($Mydisplay[$i])"
+        }
+        $selection = Read-Host -Prompt "Enter the number of the configuration to use."
+        $final_config = $MyDisplay[$selection]
+        $MyNewConfig = $MyModuleRoot + '\Configuration.' + $final_config + '.psd1'
+        $MyCMD = "Copy-Item `"$MyNewConfig`" `"$MyConfig`""
+        Write-Host $MyCMD
+#        Start-Process PowerShell.exe -ArgumentList '$MyCMD' -PassThru -Wait -Verb RunAs
+        $process = Start-Process PowerShell.exe -ArgumentList '$MyCMD' -PassThru -Wait -Verb RunAs
+        $process.ExitCode
+        $process.Description
+        $process.StandardError
+        $process.StandardOutput
+	  If (Test-Path $MyConfig){$Return=$true}
+      $done=$true        
+
+   }
+}

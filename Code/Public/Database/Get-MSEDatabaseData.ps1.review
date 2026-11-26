@@ -1,0 +1,85 @@
+#################################################################################################################################################
+# Function Get-NPEDatabaseData                                                                                                         SECTION HG
+#################################################################################################################################################
+
+<#
+ .SYNOPSIS
+    This function will do something.
+ .DESCRIPTION
+    THis function will do the most awsome something sometime.
+ .NOTES 
+     Author       : 	 Written by someone
+     Version      : 	 Version 1.0 
+     Date         :      01/01/1776
+     Purpose      :      We didn't like what it did before.
+ .PARAMETER <Parm1>
+     Pre
+ .PARAMETER <Parm2>
+     Pre
+ .PARAMETER <Description>
+     Pre
+ .PARAMETER <WhatShaMaCallIt>
+     Pre
+ .EXAMPLE
+    
+#>  
+function Get-NPEDatabaseData {
+  [CmdletBinding()]
+  param (
+    [string]$connectionString,
+    [string]$query,
+    [switch]$isSQLServer
+  )
+  $FunctionName = "Get-NPEDatabaseData"
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): >>>>>Loading $($FunctionName)" $false
+  Try 
+  {
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Entering TRY:" $false
+    if ($isSQLServer) {
+      Write-Verbose 'in SQL Server mode'
+      $connection = New-Object -TypeName System.Data.SqlClient.SqlConnection
+    } else {
+      Write-Verbose 'in OleDB mode'
+      $connection = New-Object -TypeName System.Data.OleDb.OleDbConnection
+    }
+    $connection.ConnectionString = $connectionString
+    $command = $connection.CreateCommand()
+    $command.CommandText = $query
+    if ($isSQLServer) {
+      $adapter = New-Object -TypeName System.Data.SqlClient.SqlDataAdapter $command
+    } else {
+      $adapter = New-Object -TypeName System.Data.OleDb.OleDbDataAdapter $command
+    }
+    $dataset = New-Object -TypeName System.Data.DataSet
+    [void]    $adapter.Fill($dataset)
+# Write-Host "$($FunctionName): $($dataset.Tables[0])"
+    $dataset.Tables[0]
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Query was successful." $true
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Exiting TRY:" $false
+  } # EndTry
+  Catch 
+  {
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Entering CATCH:" $false
+    #
+    # Add Code Here
+    #
+    $dataset = $null
+    Log-NPEError $ScriptLogFullName "$($FunctionName): It Didn't Work!!!!"
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Exiting CATCH:" $false
+  } # EndCatch
+  Finally 
+  {
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Entering FINALLY:" $false
+    #
+    # XXX Add code here
+    #
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Exiting FINALLY:" $false
+  } # EndFinally
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): <<<<<Exiting $($FunctionName) with result: $($Result))" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  $connection.Close()
+#  $adapter.Close()
+  Return,$dataset
+################    
+} # End Function Get-NPEDatabaseData

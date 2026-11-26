@@ -1,0 +1,27 @@
+
+#################################################################################################################################################
+# Function Convert-NPETextToSecureString                                                                                     Tested in Section EP
+#################################################################################################################################################
+<# 
+ .SYNOPSIS 
+	 Function will change a clear text password into a secure string.   
+ .DESCRIPTION 
+	 Function will change a clear text password into a secure string.   
+ .NOTES 
+     Author       : 	 Ron Gines
+     Version Date : 	 Version 1.0 - Cleaned up for first NPPC release
+ .PARAMETER <TextString>
+     This is a text representation of the password to be converted
+ .EXAMPLE   
+	 $NewSecureString = Convert-TextToSecureString
+#> 
+Function Convert-NPETextToSecureString
+{
+  [CmdletBinding(SupportsShouldProcess=$True)]
+  Param(
+    [Parameter(Mandatory=$True)] [string]$TextString
+  ) # EndParam
+  $NewSecureString = ConvertTo-SecureString -String $TextString -asPlainText -force
+  Return $NewSecureString
+} # End Convert-NPETextToSecureString
+

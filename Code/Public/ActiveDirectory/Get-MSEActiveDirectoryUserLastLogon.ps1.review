@@ -1,0 +1,41 @@
+function Get-ADUserLastLogon([string]$userName)
+  {
+    $dcs = Get-ADDomainController -Filter {Name -like "USSTL*"}
+    $time = 0
+    foreach($dc in $dcs)
+      { 
+        #    $hostname = "USSTLB0005.nestle.com"
+        $hostname = $dc.HostName
+# Stupid entry to take care of a server that is not working right .. shouldn't be needed
+        if($hostname -eq "USSTLB0013.nestle.com"){continue}
+        $userlogon = Get-ADUser -Identity $userName -properties lastlogon -Server $hostname
+        $TempTime = $userlogon.LastLogon
+        if($userlogon.LastLogon -gt $time) 
+        {
+          $time = $userlogon.LastLogon
+        }
+      }
+    $dt = [DateTime]::FromFileTime($time)
+    $userpw = Get-ADUser -Identity $userName -properties passwordlastset, enabled
+    if ($userpw.enabled -eq $true)
+      {
+        Write-Host $username "last logged on at:" $dt "Password last set on :" $userpw.passwordlastset " and account is enabled."
+      }
+    else
+      {
+        Write-Host $username "last logged on at:" $dt "Password last set on :" $userpw.passwordlastset " and account is disabled."
+      }
+
+    $UserInfo = @{
+                 'UserName' = $UserName;
+                 'LastLogon' = $dt;
+                 'PasswordReset' = $userpw.passwordlastset
+                 'Enabled' = $userpw.enabled
+                 }
+
+    $VersionObj = New-Object -TypeName PSObject -Property $UserInfo
+    Write-Debug "About to dump output ... Get ready."
+    Write-Debug $VersionObj
+    $VersionObj.psobject.typenames.insert(0,'Custom.User.Output.Thing')
+    $Global:VersionObjFull += $VersionObj
+  }

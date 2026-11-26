@@ -1,0 +1,30 @@
+#################################################################################################################################################
+# Function Get-NPEEnvironmentVariablePath                                                                                    Tested in Section FE
+#################################################################################################################################################
+# This needs work
+<# 
+ .SYNOPSIS 
+	 Function to Return a system environmental variable
+ .DESCRIPTION 
+	 Function to Return a system environmental variable
+ .NOTES 
+     Author       : 	 Adapter by Ron Gines from  http://blogs.technet.com/b/heyscriptingguy/archive/2011/07/23/use-powershell-to-modify-your-environmental-path.aspx
+     Version Date : 	 Version 1.0 - Cleaned up for first NPPC release
+ .PARAMETER <EnvironmentVariable>
+     A Valid E-Mail address for the receiving entity
+ .EXAMPLE 
+	 Template Example 1
+#> 
+Function Get-NPEEnvironmentVariablePath
+{
+  [Cmdletbinding()]
+  param
+    ( 
+      [Parameter(Mandatory=$True)] [String]$EnvironmentVariable
+    )
+  $EnvPath = [environment]::GetEnvironmentVariable($EnvironmentVariable,"Machine")
+  
+Write-Host "GET-FUNCTION:  $($EnvPath)"
+  
+  Return $EnvPath
+} # End Get-NPEEnvironmentVariablePath

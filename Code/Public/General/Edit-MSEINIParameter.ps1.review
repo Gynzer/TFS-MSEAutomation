@@ -1,0 +1,49 @@
+#################################################################################################################################################
+# Function Edit-NPEINIParameter                                                                                            Tested in Section EE
+#################################################################################################################################################
+
+## NOT NEEDED?    Updating the INI array is as easy as $INIArray["Section"]["Key"]="NewValue"
+
+function Edit-NPEINIParameter
+{
+  [CmdletBinding(SupportsShouldProcess=$True)]
+  Param(
+    [Parameter(Mandatory=$True)] [string]$file, 
+    [Parameter(Mandatory=$True)] [string]$section, 
+    [Parameter(Mandatory=$True)] [string]$key,
+    [Parameter(Mandatory=$True)] [string]$DefaultString = ""
+  ) # EndParam
+  if (Test-path $file){
+    $FunctionName = "Edit-NPEINIParameter"
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): >>>>>Loading $($FunctionName)" $false
+    $Return = $False    
+    #
+    # Prepare the parameter types and parameter values for the Invoke-WindowsApi script 
+    $returnstring = New-Object System.Text.StringBuilder 5000 
+    $parameterTypes = [string], [string], [string], [System.Text.StringBuilder], [int], [string] 
+$parameterTypes
+    $parameters = [string] $section, [string] $key, [string] $DefaultString, [System.Text.StringBuilder] $returnstring, [int] $returnstring.Capacity, [string] $file   
+$parameters
+    #
+    # Invoke the API 
+    $ReturnValue = Invoke-WindowsApi "kernel32.dll" ([UInt32]) "GetPrivateProfileString" $parameterTypes $parameters
+    Write-Log ("GetPrivateProfileString returnvalue="+ $ReturnValue + " returnString="+ $ReturnString)
+    If ($local:ReturnValue -ne 0) {
+      $Return = $True
+    } # EndIf
+#    $OutString.Value = $returnstring.ToString()
+Write-String "INI Key/Value: $($returnstring.ToString())"
+    #
+    # And return the results 
+    # [string]$lFN = "???" # local-FunctionName
+    Return $Return
+
+  }Else{
+    Write-Host "$file could not be read from function call Find-Paramter."
+  }
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): <<<<<Exiting $($FunctionName) with result: $($Result))" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  return $Result
+} # End Edit-NPEINIParameter
+

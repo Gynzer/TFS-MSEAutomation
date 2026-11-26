@@ -1,0 +1,51 @@
+#################################################################################################################################################
+# Setup-NPEPowerShellEnvironment.ps1
+#################################################################################################################################################
+<# 
+ .SYNOPSIS 
+	 Script to setup the NPE Powershell environment on an MESAPPS cluster
+ .DESCRIPTION 
+	 Script to setup the NPE Powershell environment on an MESAPPS cluster.
+         This will need to be run on each side of the cluster with MESPPS on each side
+ .NOTES 
+     Author       : 	 Ron Gines 
+     Version Date : 	 Version 1.0 - First Release
+#> 
+
+# There are no paramters for this script.    However you might need to overwrite the following.
+$NewPSModulePath = @()
+
+$NewPSModulePath += "\\USpppL4000.nestle.com\MESAPPS\COMMON\PowerShell\Modules"
+$NewPSModulePath += "\\USpppL4000.nestle.com\MESAPPS\PowerShell"
+
+Write-Host "PSModulePath: $($NewPSModulePath)."
+
+
+# Add the New Directories to the PSModulePath Environment variable
+
+  # Get the current search path from the environment keys in the registry.
+   $OldPath = $ENV:PSModulePath
+   Write-Host "OldPath: $($OldPath)"
+
+
+ForEach ($Path in $NewPSModulePath){
+
+  # See if the new folder exists on the file system.
+  If (!(TEST-PATH $Path))
+    { Write-Host ‘Folder Does not Exist, Cannot be added to PSModulePath’ }
+
+  # See if the new Folder is already in the path.
+  If ( $OldPath | Select-String -SimpleMatch $Path)
+    { Write-Host ‘Folder already within PSModulePath' }
+
+  # Set the New Path
+  $OldPath=$OldPath+’;’+$Path
+  $NewPath = $OldPath
+
+} # End ForEach
+
+[Environment]::SetEnvironmentVariable("PSModulePath", $NewPath, "Machine")
+# Write-Host "The new PSModulePath is $NewPath."
+Write-Host "The new PSModulePath is $($ENV:PSModulePath)."
+
+# We're Done

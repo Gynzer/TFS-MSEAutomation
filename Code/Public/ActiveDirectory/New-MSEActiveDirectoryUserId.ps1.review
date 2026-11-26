@@ -1,0 +1,128 @@
+#################################################################################################################################################
+# Function New-NPEActiveDirectoryUserID                                                                                   
+#################################################################################################################################################
+<# 
+ .SYNOPSIS 
+	 Function will create an basic ID in Active Directory consisting of just ID, password and description in a defined OU with no extended information.
+
+ .DESCRIPTION 
+	 Function will create an basic ID in Active Directory consisting of just ID, password and description in a defined OU with no extended information.
+     Will return a value of $True if successul or $False if not.
+
+ .PARAMETER <ADContainer>
+     This is a pointer to the AD Container where the ID is to be created
+     Shuold be in the format similar to
+           "ou=US-StLouis-HQ,ou=LMS Users and Groups,ou=NPPC AMS,ou=AMS,ou=Organizations,dc=nestle,dc=com"                         
+     If your script is loading the NPECommonProperties, the following variables can also be used
+            $NPPC_LDAPLMSContainer
+            $NPPC_LDAPFGSContainer
+            $NPPC_LDAPESSContainer
+            $NPPC_LDAPDGContainer
+            $NPPC_LDAPNDRContainer
+
+ .PARAMETER <NewUserID>
+     Single word ID to be created (ie - USSTLBatchEmUp_SVC)
+
+ .PARAMETER <TextPassword>
+     This is a text representation of a password (will be turned into a secure string internally)
+
+ .PARAMETER <Description>
+     This is the description for the UserID
+
+ .EXAMPLE   
+	 $NewSecureString = Create-ActiveDirectoryUserID $NPPC_LDAP_LMS_Container "Santa" "NorthPol3!sTh3r3" "This is a Santa's Secret ID"
+     
+ .EXAMPLE   
+	 $NewSecureString = Create-ActiveDirectoryUserID $NPPC_LDAP_LMS_Container $TempUserID $TempPassword $TempDescription
+
+#> 
+Function New-NPEActiveDirectoryUserID
+{
+  [CmdletBinding(SupportsShouldProcess=$True)]
+  Param(
+    [Parameter(Mandatory=$True)]  [string]$ADContainer,
+    [Parameter(Mandatory=$True)]  [string]$NewUserID,
+    [Parameter(Mandatory=$True)]  [string]$TextPassword,
+    [Parameter(Mandatory=$False)] [string]$Description
+  ) # EndParam
+
+  $FunctionName = "New-NPEActiveDirectoryUserID"
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): >>>>>Loading" $false
+  [boolean]$Result = $False
+
+  Try 
+  {
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Entering TRY:" $false
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Ready to create ID $($NewUserID)." $true
+    $NewSecurePassword = ConvertTo-SecureString $TextPassword -asplaintext -force -ErrorAction Stop
+    $TempPrincipal = $NewUserID + "@" + $NPPC_Domain_DNS 
+    if ($TestOnly -eq $true)
+    {
+      Log-NPEWrite $ScriptLogFullName "$($FunctionName): TEST ONLY: Next step would create the ID $($NewUserID) in: " $true
+      Log-NPEWrite $ScriptLogFullName "    $($ADContainer)" $true
+      $Success = $False
+    }
+    Else
+    {
+      $CheckIfThere = Test-NPEActiveDirectoryUserExists $NewUserID -ErrorACtion Stop
+      If ($CheckIfThere)
+      {
+        $Success = $False
+        Log-NPEWrite $ScriptLogFullName "$($FunctionName): ID $($NewUserID) already exists in AD." $true
+      }
+      Else
+      {
+        New-ADUser -Name $NewUserID -Path $ADContainer -AccountPassword $NewSecurePassword -Description $Description -CannotChangePassword $true -PasswordNeverExpires $true -SamAccountName $NewUSerID -DisplayName "$($NewUserID)" -UserPrincipalName "$($TempPrincipal)" -Enabled $true -ErrorAction Stop
+        Log-NPEWrite $ScriptLogFullName "$($NewUserID) was created in AD.  Pausing for 30 seconds so that validation works correctly." $true
+        # Need to wait to AD to catch up with itself.   If we check too quickly the response is that it does not exist.
+        Start-Sleep -s 30
+        Add-Type -AssemblyName System.DirectoryServices.AccountManagement
+        $ct = [System.DirectoryServices.AccountManagement.ContextType]::Domain
+        $pc = New-Object System.DirectoryServices.AccountManagement.PrincipalContext($ct, $NPPC_Domain_NT)
+        if ($pc.ValidateCredentials($NewUserID, $TextPassword))
+        {
+          Log-NPEWrite $ScriptLogFullName "$($FunctionName): $($NewUSerID) password change successfully in AD." $true
+          $Success = $True
+        }
+        else
+        {
+          Log-NPEError $ScriptLogFullName "$($FunctionName): $($NewUserID) Password failed in AD. Exiting."
+          Log-NPEError -LogPath $ScriptLogFullName -ErrorDesc "$($FunctionName): $($_.Exception)"
+          $Success = $False
+        } # EndIf
+      } # EndIf
+    } # EndIf
+    $Result = $true
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Exiting TRY:" $false
+  } # EndTry
+  Catch 
+  {
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Entering CATCH:" $false
+    #
+    Log-NPEError $ScriptLogFullName "$($FunctionName): User Creation function for $($NewUserID) Failed."
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): User Creation function for $($NewUserID) Failed." $true
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Error Message: $_.Exception.Message" $true
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Filed Item   : $_.Exception.ItemName " $true
+    $Result = $false
+    $Success = $false
+    #
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Exiting CATCH:" $false
+  } # EndCatch
+  Finally 
+  {
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Entering FINALLY:" $false
+    If ($Result -eq $true)
+    {
+      Log-NPEWrite $ScriptLogFullName "$($FunctionName): User was created." $true
+    }
+    Else
+    {
+      Log-NPEWrite $ScriptLogFullName "$($FunctionName): User was NOT created." $true
+    }
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Exiting FINALLY:" $false
+  } # EndFinal
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): <<<<<Exiting $($FunctionName) with result: $($Result))" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  Return $Success
+} # End Function New-NPEActiveDirectoryUserID

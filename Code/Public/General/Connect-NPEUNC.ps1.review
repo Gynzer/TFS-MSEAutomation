@@ -1,0 +1,65 @@
+   
+#################################################################################################################################################
+# Function Connect-NPEUNC                                                                                                    Tested in Section FB
+#################################################################################################################################################
+<# 
+ .SYNOPSIS 
+	 Function to connect to a remote server UNC with a new set of credentials
+ .DESCRIPTION 
+	 Function to connect to a remote server UNC with a new set of credentials
+ .NOTES 
+     Author       : 	 Ron Gines
+     Version Date : 	 Version 1.0 - Cleaned up for first NPPC release
+ .PARAMETER <Parameter_Name>
+     <Brief description of parameter input required. Repeat this attribute if required>
+ .EXAMPLE 
+	 Template Example 1
+ .EXAMPLE   
+	 Template Example 2
+#> 
+Function Connect-NPEUNC
+{ 
+  [CmdletBinding(SupportsShouldProcess=$True)]
+  Param(
+    [Parameter(Mandatory=$True)] [string]$uncServer,
+    [Parameter(Mandatory=$True)] [string]$username,
+    [Parameter(Mandatory=$True)] [string]$password
+  ) # EndParam
+  $FunctionName = "Connect-NPEUNC"
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): >>>>>Loading" $false
+  $Connection = $null
+  try
+  {
+#write-Host "########################################"
+#write-host $uncServer
+#write-host $uncServer.GetType()
+#write-host $username
+#write-host $password
+#write-Host "########################################"
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Entering TRY:" $false
+    net use $uncServer /DEL
+    net use $uncServer $password /USER:$username
+    If (Get-ChildItem "$($uncServer)" -ErrorAction "Stop"| Where {$_.Mode -match 'd'} | ForEach {$_.Name}){
+      Log-NPEWrite $ScriptLogFullName "$($uncServer) could be read" $true
+      $Connection = $True
+    } # End If
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Exiting TRY:" $false
+  } # End Try
+  catch [System.Exception] 
+  {
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Entering CATCH:" $false
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Could not connect to remote server... $_.Exception.Message" $true
+    $Connection = $False
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Exiting CATCH:" $false
+  } # End Catch
+  Finally 
+  {
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Entering FINALLY:" $false
+    net use $uncServer /DEL
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Exiting FINALLY:" $false
+  } # End Finally
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): <<<<<Exiting $($FunctionName) with result: $($Connection))" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  Return ,$Connection
+} # End Connect-NPEUNC

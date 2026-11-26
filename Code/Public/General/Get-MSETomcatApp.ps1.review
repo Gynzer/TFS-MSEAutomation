@@ -1,0 +1,72 @@
+
+#################################################################################################################################################
+# Function Get-NPETomcatApp                                                                                              
+#################################################################################################################################################
+<# 
+ .SYNOPSIS 
+	Function to list all deployed WAR files in a TOmcat instance
+ .DESCRIPTION 
+	Function will list all deployed WAR files.  Required parameters are Web Base URL, named application, userid and password for manager-script account.
+ .NOTES 
+     Author       : 	 Ron Gines
+     Version Date : 	 Version 1.0 - 10/20/2015
+ .PARAMETER <BaseURL>
+     This will be the base URL query in the format "HTTP://<server>.nestle.com:<port>" (no closing "/")(The port is optional if Tomcat is using port 80)
+ .PARAMETER <URLUserID>
+     This will be the UserID for the query, if needed.
+ .PARAMETER <URLPassword>
+     This will be the password for the query, if needed. (Clear Text Variable)
+
+ .EXAMPLE   
+	$WebResult = Get-NPETomcatApp "http://usstll8325.nestle.com:8083" $MyUserID $MyTextPassword
+
+	$WebResult.Success will be $True if Successful, and $False otherwise
+	$WebResult.Page will hold the HTML or Page return from the URL query.
+
+#> 
+  
+Function Get-NPETomcatApp
+{
+   [CmdletBinding(SupportsShouldProcess=$True)]
+   Param(
+     [Parameter(Mandatory=$True)] [string]$BaseURL,
+     [Parameter(Mandatory=$True)] [string]$URLUserID,
+     [Parameter(Mandatory=$True)] [string]$URLPassword
+   ) # EndParam
+   $FunctionName = "Get-NPETomcatApp"
+   Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+   Log-NPEWrite $ScriptLogFullName "$($FunctionName): >>>>>Loading" $false
+   $WebResult = @{}
+   If (($BaseURL -eq $null) -or  ($URLUserID -eq $null) -or ($URLPassword -eq $null))
+   {
+      Log-NPEWrite $ScriptLogFullName "$($FunctionName): At least one parameter is missing.   We are exiting this function.   Please correct."
+      $WebResult.WebPage = $null
+      $WebResult.Success = $False
+   }
+   Else
+   {
+      Log-NPEWrite $ScriptLogFullName "$($FunctionName): Listing WAR files deployed on $($BaseURL)." $True
+      $FullURL                = "$($BaseURL)/manager/text/list"
+      $creds                  = new-object System.Net.networkCredential($URLUserID, $URLPassword)
+      $credCache              = new-object System.Net.CredentialCache
+      $webclient              = new-object System.Net.WebClient
+      $credCache.Add($FullURL,"Basic",$creds)
+      $webclient.Credentials  = $credCache
+      Try
+      {
+         $webpage                = $webclient.DownloadString($FullURL)
+         Log-NPEWrite $ScriptLogFullName "$($FunctionName): Application List Successfully Requested." $True
+         $WebResult.WebPage = $webpage
+         $WebResult.Success = $true
+      } # Try
+      Catch
+      {
+         Log-NPEWrite $ScriptLogFullName "$($FunctionName): Application List Request FAILED." $True
+         $WebResult.WebPage = $null
+         $WebResult.Success = $false
+      } # Catch    
+   } # Else
+   return, $WebResult
+} # Function  Get-NPETomcatApp
+
+

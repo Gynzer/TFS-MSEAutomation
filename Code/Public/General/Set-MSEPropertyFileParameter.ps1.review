@@ -1,0 +1,57 @@
+
+
+#################################################################################################################################################
+# Function Set-NPEMESAPPSPropertyParameter                                                                                   Tested in Section EA
+#################################################################################################################################################
+<# 
+ .SYNOPSIS 
+	 Function to update a value to a key within an INI/property file.
+ .DESCRIPTION 
+	 This function will take as input, a file, a key parameter and a new key value.
+ .NOTES 
+     Author       : 	 Ron Gines
+     Version Date : 	 Version 1.0 - Cleaned up for first NPPC release
+ .PARAMETER <file>
+     This is a full path or URL to a file
+ .PARAMETER <key>
+     This is a key parameter as it is found in the INI/propoerty file.
+ .PARAMETER <keyvalue>
+     This is the new value that should be applied to the key parameter in the INI/property file
+ .EXAMPLE 
+	 $Result = Set-NPEMESAPPSPropertyParameter "C:\Temp\Test.ini" "User" "PUClausSa"
+#> 
+function Set-NPEMESAPPSPropertyParameter
+{
+  [CmdletBinding(SupportsShouldProcess=$True)]
+  Param(
+    [Parameter(Mandatory=$True)] [string]$file,
+    [Parameter(Mandatory=$True)] [string]$key,
+    [Parameter(Mandatory=$True)] [string]$keyvalue
+  ) # EndParam
+   If ($TestOnly)
+   {
+      Log-NPEWrite $ScriptLogFullName "FILE    :   $($file)" $true
+      Log-NPEWrite $ScriptLogFullName "Key     :   $($key)" $true
+      Log-NPEWrite $ScriptLogFullName "keyvalue:   $($keyvalue)" $true
+   }
+   If ($key -like "*=*")
+   {
+      $key = $key.Trim("=")
+   }
+  $FunctionName = "Set-NPEMESAPPSConfigParameter"
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): >>>>>Loading $($FunctionName)" $false
+  $content = Get-Content $file
+  if ( $content -match "^$key\s*=*.*`$" ){
+    $content -replace "^$key\s*=*.*`$", "$($key)=$($keyvalue)" | Set-Content $file  
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Key: $($key) was changed with $($keyvalue) in the file $($file)." $false
+    $Result = $true
+  }else{
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Key: $($key) was not found in the file $($file)." $false
+    $Result = $false
+  } # End If
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): <<<<<Exiting $($FunctionName) with result: $($Result))" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  Return $Result
+
+} # End Set-NPEMESAPPSPropertyParameter

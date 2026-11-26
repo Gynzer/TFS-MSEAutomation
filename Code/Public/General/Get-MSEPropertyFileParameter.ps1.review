@@ -1,0 +1,54 @@
+#################################################################################################################################################
+# Function Get-NPEMESAPPSPropertyParameter                                                                                   Tested in Section EC
+#################################################################################################################################################
+
+## Need to write information .....
+         
+function Get-NPEMESAPPSPropertyParameter
+{        
+  [CmdletBinding(SupportsShouldProcess=$True)]
+  Param(
+    [Parameter(Mandatory=$True)] [string]$File,
+    [Parameter(Mandatory=$True)] [string]$key,
+    [string]$keyvalue
+  ) # EndParam
+  $FunctionName = "Get-NPEMESAPPSPropertyParameter"
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): >>>>>Loading $($FunctionName)" $false
+  $Result = @{}
+  $Done = "Nope"
+  switch -regex -file $File {
+    "^\s*([^#].+?)\s*=\s*(.*)" {
+      $name,$value = $matches[1..2]
+      if (($name -eq $key) -or-($name+"=" -eq $key)){
+        If (($Done -eq "Nope") -and ($value -eq $keyvalue)){
+          Log-NPEWrite $ScriptLogFullName "$($FunctionName): Key $($Key) found with value $($value)." $false
+          $Result =  @{ "KeyName" = $Key }
+          $Result += @{ "Value" = $value }
+          $Result += @{ "ReturnCode" = 3 }
+          $Result += @{ "ResultText" = "Key $($Key) found with value $($value)." }
+          $Done   = "Yep"
+        }else{
+          Log-NPEWrite $ScriptLogFullName "$($FunctionName): Key $($Key) found with value $($value)." $false
+          Log-NPEWrite $ScriptLogFullName "$($FunctionName): It was expected to be $($Keyvalue)." $false
+          $Result =  @{ "KeyName" = $Key }
+          $Result += @{ "Value" = $value }
+          $Result += @{ "ReturnCode" = 2 }
+          $Result += @{ "ResultText" = "Key $($Key) found with value $($value). It was expected to be $($Keyvalue)." }
+          $Done   = "Yep"
+        } # End If
+      } # End If
+    } # End Codeblock
+  } # End Codeblock
+  If ($Done -eq "Nope"){
+    Log-NPEWrite $ScriptLogFullName "$($FunctionName): Key $($key) was not found in $($File)" $false
+    $Result =  @{ "KeyName" = "" }
+    $Result += @{ "Value" = "" }
+    $Result += @{ "ReturnCode" = 1 }
+    $Result += @{ "ResultText" = "Key $($key) was not found in $($File)" }
+  }
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): <<<<<Exiting $($FunctionName) with result: $($Result))" $false
+  Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+  return,$Result
+} # End Function Get-NPEMESAPPSPropertyParameter
+

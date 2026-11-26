@@ -1,0 +1,13 @@
+function Start-NPEService(
+    [string]$serviceName, 
+    [string]$targetServer)
+{
+    "Getting service $serviceName on server $targetServer"
+    $service = Get-NPEService $serviceName $targetServer
+    if (!($service.Started))
+    {
+        "Starting service $serviceName on server $targetServer"
+        $result = $service.StartService()
+        Test-NPEServiceResult -operation "Starting service $serviceName on $targetServer" -result $result   
+    }
+}

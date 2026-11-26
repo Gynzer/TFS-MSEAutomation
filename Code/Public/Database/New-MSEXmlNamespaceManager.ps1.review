@@ -1,0 +1,38 @@
+#################################################################################################################################################
+# Function New-NPEXmlnameSpaceManager
+#################################################################################################################################################
+<# 
+ .SYNOPSIS 
+    Returns a set of namespaces.
+ .DESCRIPTION 
+    Returns a set of namespaces.
+ .NOTES 
+     Author       : 	 Ron Gines
+     Version-Date : 	 Version 1.0 - April 6, 2106
+     Adapted from :      https://gist.github.com/ChrisMissal/5979564
+
+ .PARAMETER
+   XmlDocument - Usually populated with a variable similar to the following: [xml]$Definition = Get-Content -Path $RdlPath
+   DefaultNamespacePrefix - d
+ .EXAMPLE 
+   $NsMgr = New-NPEXmlnameSpaceManager $Definition d
+#> 
+Function New-NPEXmlnameSpaceManager {
+  [CmdletBinding()]
+  param (
+   $XmlDocument, 
+   $DefaultNamespacePrefix
+) 
+   $FunctionName = "New-NPEXmlnameSpaceManager"
+   Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+   Log-NPEWrite $ScriptLogFullName "$($FunctionName): >>>>>Loading $($FunctionName)" $false
+   $Result = ""
+   $NsMgr = New-Object -TypeName System.Xml.XmlNamespaceManager -ArgumentList $XmlDocument.NameTable
+   $DefaultNamespace = $XmlDocument.DocumentElement.GetAttribute('xmlns')
+   if ($DefaultNamespace -and $DefaultNamespacePrefix) {
+       $NsMgr.AddNamespace($DefaultNamespacePrefix, $DefaultNamespace)
+   }
+   Log-NPEWrite $ScriptLogFullName "$($FunctionName): <<<<<Exiting $($FunctionName) with result: $($Result))" $false
+   Log-NPEWrite $ScriptLogFullName "$($FunctionName): -------------------------------------" $false
+   return ,$NsMgr # unary comma wraps $NsMgr so it isn't unrolled
+} # End-Function New-NPEXmlNameSpaceManager
